@@ -55,6 +55,20 @@ Delete the example before you submit.
 
 
 
+## CC-04 — "The buttons don't work on my tablet"
+
+**Reproduced:** Simulated tablet viewport between 761px and 900px (e.g. 800px width). Clicked "Add to Cart" or the star/favorite icon on any dish card. Neither button reacted to clicks, despite cursor and styles looking normal. Testing at < 760px (mobile) or > 900px (desktop) worked fine.
+
+**Cause:** In `frontend/style.css`, inside `@media (min-width: 761px) and (max-width: 900px)`, `.dish-card::after` positioned an invisible pseudo-element (`height: 58px; z-index: 3;`) directly over the bottom Add to Cart area, and `.img-wrap::after` positioned an invisible pseudo-element (`width: 52px; height: 52px; z-index: 1;`) over the top-right favorite star. Because neither had `pointer-events: none`, they intercepted all mouse/touch click events.
+
+**Fix:** Added `pointer-events: none;` to `.dish-card::after` and `.img-wrap::after` in the tablet media query in `frontend/style.css`, allowing clicks to pass directly through to the underlying action buttons.
+
+**Checked:** Tested clicking Add to Cart and favorite stars at 768px, 800px, and 850px viewport widths. All buttons respond immediately to clicks.
+
+**Time:** about 15 minutes.
+
+
+
 ## CC-05 — "The category bar scrolls away on my phone"
 
 **Reproduced:** On mobile viewports (<= 480px), scrolling down the dishes list caused the sticky category/filter bar to scroll away out of sight instead of remaining pinned at the top.

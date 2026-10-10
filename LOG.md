@@ -38,6 +38,37 @@ Delete the example before you submit.
 
 
 
+## CC-03 — "The menu is wider than my phone"
+
+**Reproduced:** Resized browser viewport to mobile width (~390px - 600px). The dishes in the grid caused horizontal overflow; scrolling sideways was necessary and the right-hand dishes had their Add to Cart buttons clipped past the right viewport boundary.
+
+**Cause:** In `frontend/style.css`, under `@media (max-width: 760px)`:
+1. `.name-btn` was set to `width: max-content;`, preventing long dish names from wrapping and forcing the button and card to expand horizontally.
+2. `.dish-card img` had `width: auto; min-width: 100%; height: 170px; aspect-ratio: 3 / 2;`, forcing an intrinsic width of at least 255px per column.
+3. The grid used `repeat(2, 1fr)` where `1fr` tracks default to `min-width: auto`, preventing cards from shrinking to fit smaller screens.
+
+**Fix:** Changed `.name-btn` to `width: 100%` so dish titles wrap neatly; updated `.dish-card img` to `width: 100%; height: 170px; object-fit: cover;` without forced aspect ratio/min-width blowout; and used `grid-template-columns: repeat(2, minmax(0, 1fr));` so grid cells shrink within the viewport.
+
+**Checked:** Tested at various mobile viewport widths (375px, 414px, 540px, 720px). Dishes and buttons fit completely within the screen with no horizontal scrolling or clipped buttons.
+
+**Time:** about 25 minutes.
+
+
+
+## CC-05 — "The category bar scrolls away on my phone"
+
+**Reproduced:** On mobile viewports (<= 480px), scrolling down the dishes list caused the sticky category/filter bar to scroll away out of sight instead of remaining pinned at the top.
+
+**Cause:** In `frontend/style.css`, `@media (max-width: 480px)` contained `.view { overflow-x: hidden; }`. In CSS specification, applying `overflow: hidden` or `overflow-x: hidden` to any parent ancestor breaks `position: sticky` on all its descendant elements (in this case `.filters`, which has `position: sticky; top: 0;`).
+
+**Fix:** Removed `.view { overflow-x: hidden; }` from the mobile media query. Since the root cause of horizontal overflow (CC-03) was fixed by proper card and grid constraints, the band-aid `overflow-x: hidden` was unnecessary and was actively breaking the sticky behavior.
+
+**Checked:** Scrolled down the dishes list at mobile widths (375px - 480px). The category and filter bar remains firmly sticky at the top of the viewport.
+
+**Time:** about 15 minutes.
+
+
+
 ## Could not fix
 
 For anything you investigated but did not solve. Say what you tried and

@@ -24,6 +24,20 @@ Delete the example before you submit.
 
 
 
+## CC-02 — "Can't read anything in dark mode"
+
+**Reproduced:** Toggled theme to dark mode via the theme button (setting `data-theme="dark"` on `<html>`). The dish card background turned dark (`#201913`), but dish names and prices remained dark brown (`#2b2118`), making text practically unreadable against the card background.
+
+**Cause:** In `frontend/style.css`, `.dish-body` had a hardcoded `color: #2b2118;`. In dark mode, `--card` background is `#201913`. Because the color was hardcoded instead of using CSS custom property `--ink` (which is `#f2e8df` in dark mode and `#2b2118` in light mode), the inherited text color did not adapt to dark mode.
+
+**Fix:** Changed `color: #2b2118;` to `color: var(--ink);` on `.dish-body` in `frontend/style.css`.
+
+**Checked:** Switched between light and dark themes; dish names and prices are crisp and high-contrast in both modes.
+
+**Time:** about 10 minutes.
+
+
+
 ## Could not fix
 
 For anything you investigated but did not solve. Say what you tried and

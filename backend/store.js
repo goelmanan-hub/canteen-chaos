@@ -33,7 +33,16 @@ function write(name, data) {
   const p = file(name);
   const tmp = `${p}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
-  fs.renameSync(tmp, p);
+  try {
+    fs.renameSync(tmp, p);
+  } catch (err) {
+    if (err.code === 'EPERM' || err.code === 'EEXIST' || err.code === 'EBUSY') {
+      fs.copyFileSync(tmp, p);
+      try { fs.unlinkSync(tmp); } catch (_) {}
+    } else {
+      throw err;
+    }
+  }
   cache.delete(name);
   return data;
 }

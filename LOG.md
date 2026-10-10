@@ -174,3 +174,19 @@ None. All 10 assigned bugs (CC-01 through CC-10) were successfully reproduced, i
 **Checked:** Order successfully advances from `ready` to `picked`. Order history correctly logs the `picked` transition, and rating endpoints now allow students to rate their picked orders.
 
 **Time:** about 20 minutes.
+
+
+
+### Store: Windows filesystem EPERM on atomic renameSync
+
+**How I noticed it:** During cancelling tests on Windows, `PATCH /api/orders/:token/status` sporadically threw HTTP 500 with `EPERM: operation not permitted, rename '...data\menu.json.tmp' -> '...data\menu.json'`.
+
+**Reproduced:** Triggered rapid sequential read/write operations to `menu.json` via store on Windows. Windows locks open file handles, preventing atomic `fs.renameSync` from replacing the target file.
+
+**Cause:** In `backend/store.js`, `write` performed `fs.renameSync(tmp, p)`. On Windows, replacing an existing file via `renameSync` fails with `EPERM` or `EBUSY` when background readers or system file monitors hold the file handle.
+
+**Fix:** Wrapped `fs.renameSync` with a try/catch falling back to `fs.copyFileSync(tmp, p)` and `fs.unlinkSync(tmp)` when `EPERM`, `EEXIST`, or `EBUSY` occurs.
+
+**Checked:** Verified that rapid concurrent menu updates and order cancellations complete without any EPERM errors.
+
+**Time:** about 10 minutes.

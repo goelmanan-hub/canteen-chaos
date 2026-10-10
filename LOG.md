@@ -125,6 +125,34 @@ Delete the example before you submit.
 
 
 
+## CC-09 — "The menu shows more dishes than it should"
+
+**Reproduced:** Loaded the menu page or queried `/api/menu?limit=5&page=1` and `/api/menu?limit=5&page=2`. Instead of returning only 5 dishes per page, the API dumped all dishes in the database at once, and both page 1 and page 2 returned the identical full dataset starting from index 0.
+
+**Cause:** In `backend/logic/search.js`, inside `paginate(list, page, limit)`, the sliced array `items = list.slice(start, start + perPage)` was correctly computed, but the return statement returned `items: list` (the entire un-sliced array) instead of the sliced `items`.
+
+**Fix:** Changed `items: list` to `items` (or `items: items`) in the return object of `paginate` in `backend/logic/search.js`.
+
+**Checked:** Queried `/api/menu?limit=5&page=1` and `/api/menu?limit=5&page=2`; each now returns exactly 5 dishes, and page 1 and page 2 contain different dishes. The frontend infinite scroll/pagination now correctly batches requests.
+
+**Time:** about 15 minutes.
+
+
+
+## CC-10 — "Sorting by price is backwards"
+
+**Reproduced:** Selected "Price: low to high" from the sort dropdown or requested `/api/menu?sort=price-asc`. The most expensive dishes were returned first. Selecting "Price: high to low" (`/api/menu?sort=price-desc`) returned the cheapest dishes first.
+
+**Cause:** In `backend/logic/search.js`, the comparator functions in `SORTERS` were inverted: `'price-asc'` was defined as `(a, b) => b.price - a.price` (descending), while `'price-desc'` was defined as `(a, b) => a.price - b.price` (ascending).
+
+**Fix:** Corrected both comparators in `backend/logic/search.js`: `'price-asc': (a, b) => a.price - b.price` and `'price-desc': (a, b) => b.price - a.price`.
+
+**Checked:** Verified that sorting by "Price: low to high" returns items in strictly increasing price order, and "Price: high to low" in strictly decreasing price order.
+
+**Time:** about 10 minutes.
+
+
+
 ## Could not fix
 
 For anything you investigated but did not solve. Say what you tried and

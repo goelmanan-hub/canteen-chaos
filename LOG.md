@@ -10,40 +10,17 @@ Delete the example before you submit.
 
 
 
-## Example — delete this
+## CC-01 — "The search suggestions are behind everything"
 
-### CC-99 — "The cart total is wrong"
+**Reproduced:** Typed "ch" or "paneer" into the search bar. The suggestions dropdown rendered, but items below the top edge were tucked underneath `.cat-tabs` (the category tab bar). Clicking any suggestion below the top item failed because the click was captured by the category tabs sitting on top of the dropdown.
 
-**Reproduced:** Added 2 dosas at Rs. 60 each. The cart showed
-Rs. 119.99999 instead of Rs. 130. Happened every time, on any dish with
-a price ending in .50.
+**Cause:** In `frontend/style.css`, `.search-wrap` had `z-index: 1`, while its sibling `.cat-tabs` had `z-index: 40`. Since `.search-wrap` created its own stacking context with `z-index: 1`, its child `.suggest-box` could not render above `.cat-tabs` despite having `z-index: 100`.
 
-**Cause:** The total was being added up with plain floating point and
-never rounded, so 0.1 + 0.2 style errors showed up on screen. The
-rounding helper existed but this one place was not using it.
+**Fix:** Increased `z-index` of `.search-wrap` from `1` to `50` in `frontend/style.css` so that the search container and its child dropdown sit above `.cat-tabs` (which has `z-index: 40`).
 
-**Fix:** Ran the total through the existing rounding helper instead of
-adding a new one, so every price on screen goes through the same path.
+**Checked:** Typed various dish names in the search input; the suggestion box now floats cleanly above the category bar and all suggestions can be clicked directly.
 
-**Checked:** Cart, checkout and the order screen all show Rs. 130 now.
-Prices without decimals still show without a trailing .00.
-
-**Time:** about 40 minutes, most of it working out that the cart and the
-order screen round in different places.
-
-
-
-## CC-0X — "<the complaint, in short>"
-
-**Reproduced:**
-
-**Cause:**
-
-**Fix:**
-
-**Checked:**
-
-**Time:**
+**Time:** about 15 minutes.
 
 
 

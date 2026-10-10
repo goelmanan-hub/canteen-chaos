@@ -83,6 +83,34 @@ Delete the example before you submit.
 
 
 
+## CC-06 — "I ordered more than they had"
+
+**Reproduced:** Found a dish with stock of 2 (e.g. samosas). Placed an order with `qty: 5`. The order was accepted with HTTP 201, decrementing stock into negative values (-3).
+
+**Cause:** In `backend/logic/validation.js`, `validateLine` checked `if (Number(dish.stock) <= 0) errors.push(...)` (sold out check), but never checked if the ordered quantity exceeded available stock (`qty > Number(dish.stock)`). Furthermore, `reserveStock` did not check if `dish.stock < item.qty` before subtracting.
+
+**Fix:** Added validation in `validateLine`: `if (qty > Number(dish.stock)) errors.push(...)` and guarded `reserveStock` to ensure `dish.stock >= item.qty`.
+
+**Checked:** Attempting to order quantity greater than current stock returns HTTP 400 with an explicit validation error, while ordering quantity within stock succeeds.
+
+**Time:** about 15 minutes.
+
+
+
+## CC-07 — "Cancelling makes it worse"
+
+**Reproduced:** Placed an order for 2 plates of a dish with stock 4 (stock dropped to 2). Cancelled the order via `PATCH /api/orders/:token/status` with `status: 'cancelled'`. Instead of restoring stock to 4, stock dropped further to 0.
+
+**Cause:** In `backend/logic/validation.js`, inside `releaseStock(items, menu)`, the function returned `{ ...dish, stock: dish.stock - line.qty }`, subtracting the quantity again on cancellation instead of restoring it.
+
+**Fix:** Changed `-` to `+` in `releaseStock` so `stock: dish.stock + line.qty`.
+
+**Checked:** Placed an order for 2 items and cancelled it; verified dish stock increased back by 2 to its original amount. Also verified `smoke.js` cancellation check now passes.
+
+**Time:** about 10 minutes.
+
+
+
 ## Could not fix
 
 For anything you investigated but did not solve. Say what you tried and

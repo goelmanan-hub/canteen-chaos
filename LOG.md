@@ -155,22 +155,22 @@ Delete the example before you submit.
 
 ## Could not fix
 
-For anything you investigated but did not solve. Say what you tried and
-where you got to. This is worth marks — leaving it blank when you got
-stuck is not.
-
-### CC-0X — "<the complaint>"
-
-**What I tried:**
-
-**Where I got to:**
-
-**What I would try next:**
+None. All 10 assigned bugs (CC-01 through CC-10) were successfully reproduced, investigated to their root causes, and fixed.
 
 
 
 ## Extra credit
 
-Anything not on the bug log: a problem you found yourself, a test you
-wrote, or a fix you are unsure about. Same format, plus one line on how
-you noticed it.
+### State Machine: Orders stuck in 'ready' cannot transition to 'picked' or be rated
+
+**How I noticed it:** While inspecting order workflow tests in `smoke.js`, the check `ready -> picked allowed` consistently failed with HTTP 409, and all subsequent rating tests were blocked because an order must be `picked` before it can be rated.
+
+**Reproduced:** Transitioned an order through `placed` -> `accepted` -> `preparing` -> `ready`. Then sent `PATCH /api/orders/:token/status` with body `{"status": "picked"}`. The server rejected the request with HTTP 409 Conflict: `Cannot go from ready to picked`.
+
+**Cause:** In `backend/logic/status.js`, `'ready'` was incorrectly listed in `const TERMINAL = ['ready', 'picked', 'cancelled', 'refunded']`. When an order was in `ready` status, `allowedNext('ready')` treated it as a terminal state and returned an empty list `[]`, completely blocking the final step of the order lifecycle (`picked`).
+
+**Fix:** Removed `'ready'` from `TERMINAL` in `backend/logic/status.js`, so `TERMINAL = ['picked', 'cancelled', 'refunded']`. This allows `ready` orders to advance to `picked` when handed over at the counter.
+
+**Checked:** Order successfully advances from `ready` to `picked`. Order history correctly logs the `picked` transition, and rating endpoints now allow students to rate their picked orders.
+
+**Time:** about 20 minutes.

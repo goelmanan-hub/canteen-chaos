@@ -111,6 +111,20 @@ Delete the example before you submit.
 
 
 
+## CC-08 — "An old coupon still works"
+
+**Reproduced:** Created an order meeting the minimum order value of Rs. 100 and applied the coupon `FRESHERS24` (which had expired on 2024-09-30). The coupon was successfully accepted and granted a Rs. 30 discount.
+
+**Cause:** In `backend/logic/pricing.js`, `applyCoupon` checked `usesLeft`, `minOrder`, `vegOnly`, and meal `slots`, but completely omitted verifying the `coupon.expiresAt` timestamp against current date/time `now`.
+
+**Fix:** Added an expiration check in `applyCoupon`: `if (coupon.expiresAt && new Date(coupon.expiresAt).getTime() <= new Date(now).getTime()) return { valid: false, discount: 0, reason: '${coupon.code} has expired' };`.
+
+**Checked:** Tested cart quote with `FRESHERS24` on an order exceeding Rs. 100; it is now rejected with `"FRESHERS24 has expired"`, while valid unexpired coupons continue to apply normally.
+
+**Time:** about 15 minutes.
+
+
+
 ## Could not fix
 
 For anything you investigated but did not solve. Say what you tried and

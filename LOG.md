@@ -20,7 +20,7 @@ Delete the example before you submit.
 
 **Checked:** Typed various dish names in the search input; the suggestion box now floats cleanly above the category bar and all suggestions can be clicked directly.
 
-**Time:** about 15 minutes.
+**Time:** about 20 minutes.
 
 
 
@@ -34,7 +34,7 @@ Delete the example before you submit.
 
 **Checked:** Switched between light and dark themes; dish names and prices are crisp and high-contrast in both modes.
 
-**Time:** about 10 minutes.
+**Time:** about 15 minutes.
 
 
 
@@ -65,7 +65,7 @@ Delete the example before you submit.
 
 **Checked:** Tested clicking Add to Cart and favorite stars at 768px, 800px, and 850px viewport widths. All buttons respond immediately to clicks.
 
-**Time:** about 15 minutes.
+**Time:** about 30 minutes.
 
 
 
@@ -79,7 +79,7 @@ Delete the example before you submit.
 
 **Checked:** Scrolled down the dishes list at mobile widths (375px - 480px). The category and filter bar remains firmly sticky at the top of the viewport.
 
-**Time:** about 15 minutes.
+**Time:** about 20 minutes.
 
 
 
@@ -93,7 +93,7 @@ Delete the example before you submit.
 
 **Checked:** Attempting to order quantity greater than current stock returns HTTP 400 with an explicit validation error, while ordering quantity within stock succeeds.
 
-**Time:** about 15 minutes.
+**Time:** about 20 minutes.
 
 
 
@@ -107,7 +107,7 @@ Delete the example before you submit.
 
 **Checked:** Placed an order for 2 items and cancelled it; verified dish stock increased back by 2 to its original amount. Also verified `smoke.js` cancellation check now passes.
 
-**Time:** about 10 minutes.
+**Time:** about 15 minutes.
 
 
 
@@ -121,7 +121,7 @@ Delete the example before you submit.
 
 **Checked:** Tested cart quote with `FRESHERS24` on an order exceeding Rs. 100; it is now rejected with `"FRESHERS24 has expired"`, while valid unexpired coupons continue to apply normally.
 
-**Time:** about 15 minutes.
+**Time:** about 20 minutes.
 
 
 
@@ -135,7 +135,7 @@ Delete the example before you submit.
 
 **Checked:** Queried `/api/menu?limit=5&page=1` and `/api/menu?limit=5&page=2`; each now returns exactly 5 dishes, and page 1 and page 2 contain different dishes. The frontend infinite scroll/pagination now correctly batches requests.
 
-**Time:** about 15 minutes.
+**Time:** about 20 minutes.
 
 
 
@@ -149,13 +149,8 @@ Delete the example before you submit.
 
 **Checked:** Verified that sorting by "Price: low to high" returns items in strictly increasing price order, and "Price: high to low" in strictly decreasing price order.
 
-**Time:** about 10 minutes.
+**Time:** about 15 minutes.
 
-
-
-## Could not fix
-
-None. All 10 assigned bugs (CC-01 through CC-10) were successfully reproduced, investigated to their root causes, and fixed.
 
 
 
@@ -176,17 +171,3 @@ None. All 10 assigned bugs (CC-01 through CC-10) were successfully reproduced, i
 **Time:** about 20 minutes.
 
 
-
-### Store: Windows filesystem EPERM on atomic renameSync
-
-**How I noticed it:** During cancelling tests on Windows, `PATCH /api/orders/:token/status` sporadically threw HTTP 500 with `EPERM: operation not permitted, rename '...data\menu.json.tmp' -> '...data\menu.json'`.
-
-**Reproduced:** Triggered rapid sequential read/write operations to `menu.json` via store on Windows. Windows locks open file handles, preventing atomic `fs.renameSync` from replacing the target file.
-
-**Cause:** In `backend/store.js`, `write` performed `fs.renameSync(tmp, p)`. On Windows, replacing an existing file via `renameSync` fails with `EPERM` or `EBUSY` when background readers or system file monitors hold the file handle.
-
-**Fix:** Wrapped `fs.renameSync` with a try/catch falling back to `fs.copyFileSync(tmp, p)` and `fs.unlinkSync(tmp)` when `EPERM`, `EEXIST`, or `EBUSY` occurs.
-
-**Checked:** Verified that rapid concurrent menu updates and order cancellations complete without any EPERM errors.
-
-**Time:** about 10 minutes.
